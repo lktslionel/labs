@@ -1,0 +1,26 @@
+
+
+
+namespace :change do
+  desc "Create change-set"
+  task :create do
+    sh "aws --profile ghost cloudformation create-change-set  --stack-name os-pg-efs-stack  --template-body file://aws-efs/template.yaml  --change-set-name #{ENV['CHG_NAME']} --change-set-type CREATE"
+  end
+
+  task :update do
+    sh "aws --profile ghost cloudformation create-change-set  --stack-name os-pg-efs-stack  --template-body file://aws-efs/template.yaml  --change-set-name #{ENV['CHG_NAME']} --change-set-type UPDATE"
+  end
+
+  desc "Show change-set"
+  task :show do
+    sh "aws --profile ghost cloudformation describe-change-set --change-set-name  #{ENV['CHG_ID']} "
+  end
+
+  desc "Execute change-set"
+  task :exec do
+    sh "aws --profile ghost cloudformation execute-change-set --stack-name os-pg-efs-stack --change-set-name  #{ENV['CHG_ID']} "
+  end
+end
+
+
+task 'default' => nil

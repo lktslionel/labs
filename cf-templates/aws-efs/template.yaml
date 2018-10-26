@@ -1,0 +1,72 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: ''
+
+Parameters: 
+  Subnet:
+    Type: AWS::EC2::Subnet::Id
+    Description: Set the Subnet
+  VPC:
+    Type: AWS::EC2::VPC::Id
+    Description: Set the VPC
+
+
+Mappings: {}
+
+Resources:
+
+
+
+  MountTargetSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+      VpcId: !Ref VPC
+      GroupDescription: "Enable SSH access via port 22"
+      SecurityGroupIngress: 
+        - 
+          IpProtocol: "tcp"
+          FromPort: "22"
+          ToPort: "22"
+          CidrIp: "0.0.0.0/0"      
+      Tags: 
+        - Key: os:component:type
+          Value: AWS::EC2::SecurityGroup
+        - Key: os:component:name
+          Value: os.allow.any.efs.vpc1:net.inout.sg
+
+
+  # ElasticVolumeStorage 
+  #
+  ElasticVolumeStorage:
+    Type: AWS::EFS::FileSystem
+    Properties: 
+      Encrypted: false
+      FileSystemTags:
+        - 
+          Key: os:cost:function
+          Value: Storage
+          Key: os:cost:service
+          Value: AWS EFS
+          Key: os:component:name
+          Value: elastic storage volume
+          Key: os:core:env
+          Value: playground
+      PerformanceMode: generalPurpose  
+
+  # ElasticVolumeStorage 
+  #
+  # @requires ElasticVolumeStorage
+  # @requires VPCSubnet
+  # @requires MountTargetSecurityGroup
+  MountTarget: 
+    Type: AWS::EFS::MountTarget
+    Properties: 
+      FileSystemId: !Ref ElasticVolumeStorage
+      SubnetId: !Ref Subnet
+      SecurityGroups: 
+        - !Ref MountTargetSecurityGroup
+
+Outputs:
+  MountTargetId: 
+    Description: Mount Target Id used by EC2 intace to connect to.
+    Value: !Ref MountTarget
